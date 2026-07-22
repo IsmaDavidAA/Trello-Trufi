@@ -51,17 +51,23 @@ export function Layout() {
           </nav>
 
           <div className="ml-auto flex items-center gap-3">
-            <div className="hidden text-right sm:block">
-              <p className="text-sm font-semibold leading-tight text-ink">
-                {profile?.full_name || 'Usuario'}
-              </p>
-              <p className="text-[11px] uppercase tracking-[0.14em] text-mute">
-                {isAdmin ? 'Admin' : 'Miembro'}
-              </p>
-            </div>
-            <div className="grid h-9 w-9 place-items-center rounded-lg bg-neutral-200 text-xs font-bold text-ink">
-              {initials}
-            </div>
+            <Link
+              to="/profile"
+              className="flex items-center gap-3 rounded-lg transition hover:opacity-80"
+              title="Mi perfil"
+            >
+              <div className="hidden text-right sm:block">
+                <p className="text-sm font-semibold leading-tight text-ink">
+                  {profile?.full_name || 'Mi perfil'}
+                </p>
+                <p className="text-[11px] uppercase tracking-[0.14em] text-mute">
+                  {isAdmin ? 'Admin' : 'Miembro'}
+                </p>
+              </div>
+              <div className="grid h-9 w-9 place-items-center rounded-lg bg-neutral-200 text-xs font-bold text-ink">
+                {initials}
+              </div>
+            </Link>
             <button type="button" onClick={() => void signOut()} className="btn-ghost !py-2">
               Salir
             </button>
@@ -86,6 +92,9 @@ export function Layout() {
               Usuarios
             </NavLink>
           )}
+          <NavLink to="/profile" className={navClass}>
+            Perfil
+          </NavLink>
         </nav>
       </header>
 

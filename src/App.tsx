@@ -11,6 +11,7 @@ import { AdminUsersPage } from './pages/AdminUsersPage'
 import { GanttPage } from './pages/GanttPage'
 import { DataPage } from './pages/DataPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
+import { ProfilePage } from './pages/ProfilePage'
 
 function Protected({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth()
@@ -50,6 +51,7 @@ export default function App() {
             <Route path="/teams" element={<TeamsPage />} />
             <Route path="/teams/:teamId" element={<TeamDetailRoute />} />
             <Route path="/admin/users" element={<AdminUsersPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
