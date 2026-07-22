@@ -2,7 +2,7 @@ import type { FormEvent } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
-import { Modal } from '../components/Modal'
+import { Modal, PageHeader } from '../components/Modal'
 import type { Invite, Profile } from '../lib/types'
 
 export function AdminUsersPage() {
@@ -35,7 +35,7 @@ export function AdminUsersPage() {
   }, [isAdmin])
 
   if (!isAdmin) {
-    return <p className="text-coral">Solo administradores.</p>
+    return <p className="text-danger">Solo administradores.</p>
   }
 
   async function createInvite(e: FormEvent) {
@@ -65,47 +65,47 @@ export function AdminUsersPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-display text-3xl text-moss-deep">Usuarios</h1>
-          <p className="mt-1 text-sm text-ink/60">
-            Solo el admin crea cuentas. Genera una invitación y comparte el enlace.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="rounded-xl bg-moss px-4 py-2.5 text-sm font-semibold text-white hover:bg-moss-deep"
-        >
-          Nueva invitación
-        </button>
-      </div>
+    <div>
+      <PageHeader
+        title="Usuarios"
+        subtitle="Solo el admin crea cuentas. Genera un enlace de invitación y compártelo."
+        action={
+          <button type="button" onClick={() => setOpen(true)} className="btn-primary">
+            Nueva invitación
+          </button>
+        }
+      />
 
       {createdLink && (
-        <div className="rounded-2xl border border-moss/30 bg-white p-4 text-sm">
-          <p className="font-medium text-moss-deep">Enlace listo — cópialo y envíalo:</p>
-          <code className="mt-2 block break-all rounded-lg bg-sand px-3 py-2">{createdLink}</code>
+        <div className="animate-fade-up mb-6 rounded-xl border border-line bg-neutral-50 p-4 text-sm">
+          <p className="font-semibold text-ink">Enlace listo — cópialo y envíalo:</p>
+          <code className="mt-2 block break-all rounded-lg bg-white px-3 py-2 text-ink">
+            {createdLink}
+          </code>
         </div>
       )}
 
-      <section>
-        <h2 className="mb-3 font-display text-xl">Equipo activo</h2>
-        <div className="overflow-hidden rounded-2xl border border-ink/10 bg-white">
+      <section className="mb-8">
+        <h2 className="mb-3 font-display text-xl font-bold">Equipo activo</h2>
+        <div className="overflow-hidden rounded-2xl border border-line bg-surface/90">
           <table className="w-full text-left text-sm">
-            <thead className="bg-sand/80 text-ink/60">
+            <thead className="bg-canvas text-mute">
               <tr>
-                <th className="px-4 py-3">Nombre</th>
-                <th className="px-4 py-3">Email</th>
-                <th className="px-4 py-3">Rol</th>
+                <th className="px-4 py-3 font-semibold">Nombre</th>
+                <th className="px-4 py-3 font-semibold">Email</th>
+                <th className="px-4 py-3 font-semibold">Rol</th>
               </tr>
             </thead>
             <tbody>
               {users.map((u) => (
-                <tr key={u.id} className="border-t border-ink/5">
-                  <td className="px-4 py-3">{u.full_name}</td>
-                  <td className="px-4 py-3">{u.email}</td>
-                  <td className="px-4 py-3">{u.role}</td>
+                <tr key={u.id} className="border-t border-line">
+                  <td className="px-4 py-3 font-medium">{u.full_name}</td>
+                  <td className="px-4 py-3 text-mute">{u.email}</td>
+                  <td className="px-4 py-3">
+                    <span className="rounded-md bg-canvas px-2 py-0.5 text-xs font-bold uppercase tracking-wide">
+                      {u.role}
+                    </span>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -114,27 +114,27 @@ export function AdminUsersPage() {
       </section>
 
       <section>
-        <h2 className="mb-3 font-display text-xl">Invitaciones</h2>
+        <h2 className="mb-3 font-display text-xl font-bold">Invitaciones</h2>
         <div className="space-y-2">
           {invites.map((inv) => (
             <div
               key={inv.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-ink/10 bg-white px-4 py-3 text-sm"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface/90 px-4 py-3 text-sm"
             >
               <div>
-                <p className="font-medium">
+                <p className="font-semibold">
                   {inv.full_name || inv.email}{' '}
-                  <span className="text-ink/45">({inv.role})</span>
+                  <span className="text-mute">({inv.role})</span>
                 </p>
-                <p className="text-ink/55">{inv.email}</p>
+                <p className="text-mute">{inv.email}</p>
               </div>
               <div className="text-right">
                 {inv.used_at ? (
-                  <span className="text-moss">Usada</span>
+                  <span className="text-ok">Usada</span>
                 ) : (
                   <button
                     type="button"
-                    className="text-moss underline"
+                    className="font-semibold text-ink hover:underline"
                     onClick={() => {
                       const link = `${base}/invite/${inv.token}`
                       void navigator.clipboard.writeText(link)
@@ -147,47 +147,44 @@ export function AdminUsersPage() {
               </div>
             </div>
           ))}
-          {!invites.length && <p className="text-sm text-ink/50">Sin invitaciones aún.</p>}
+          {!invites.length && <p className="text-sm text-mute">Sin invitaciones aún.</p>}
         </div>
       </section>
 
       {open && (
         <Modal title="Nueva invitación" onClose={() => setOpen(false)}>
-          <form className="space-y-3" onSubmit={createInvite}>
-            <label className="block text-sm">
+          <form className="space-y-4" onSubmit={createInvite}>
+            <label className="block text-sm font-medium">
               Email
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-ink/15 px-3 py-2"
+                className="field"
               />
             </label>
-            <label className="block text-sm">
+            <label className="block text-sm font-medium">
               Nombre
               <input
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-ink/15 px-3 py-2"
+                className="field"
               />
             </label>
-            <label className="block text-sm">
+            <label className="block text-sm font-medium">
               Rol
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value as 'admin' | 'member')}
-                className="mt-1 w-full rounded-xl border border-ink/15 px-3 py-2"
+                className="field"
               >
                 <option value="member">member</option>
                 <option value="admin">admin</option>
               </select>
             </label>
-            {error && <p className="text-sm text-coral">{error}</p>}
-            <button
-              type="submit"
-              className="w-full rounded-xl bg-moss py-2.5 text-sm font-semibold text-white"
-            >
+            {error && <p className="text-sm text-danger">{error}</p>}
+            <button type="submit" className="btn-primary w-full">
               Crear invitación
             </button>
           </form>

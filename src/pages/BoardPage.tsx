@@ -46,25 +46,25 @@ function SortableCard({
       type="button"
       ref={setNodeRef}
       style={style}
-      className={`w-full rounded-xl bg-white p-3 text-left text-sm shadow-sm ring-1 ring-ink/5 hover:ring-moss/40 ${
-        card.done ? 'opacity-70' : ''
+      className={`w-full rounded-lg border border-line bg-surface p-3.5 text-left text-sm transition hover:border-neutral-400 ${
+        card.done ? 'opacity-60' : ''
       }`}
       onClick={() => onOpen(card)}
       {...attributes}
       {...listeners}
     >
       <div className="flex items-start justify-between gap-2">
-        <span className={card.done ? 'line-through text-ink/50' : 'font-medium'}>
+        <span className={card.done ? 'font-medium line-through text-mute' : 'font-semibold text-ink'}>
           {card.title}
         </span>
         {card.done && (
-          <span className="rounded bg-moss/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-moss">
+          <span className="rounded-md bg-ok/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ok">
             done
           </span>
         )}
       </div>
       {card.due_date && (
-        <p className="mt-2 text-xs text-ink/55">📅 {card.due_date}</p>
+        <p className="mt-2 text-xs font-medium text-mute">{card.due_date}</p>
       )}
     </button>
   )
@@ -99,12 +99,12 @@ function SortableColumn({
     <div
       ref={setNodeRef}
       style={style}
-      className="flex w-72 shrink-0 flex-col rounded-2xl bg-ink/[0.04] p-3"
+      className="flex w-[300px] shrink-0 flex-col rounded-xl border border-line bg-white p-3"
     >
       <div className="mb-3 flex items-center gap-2">
         <button
           type="button"
-          className="cursor-grab text-ink/30"
+          className="cursor-grab text-mute/50 hover:text-mute"
           {...attributes}
           {...listeners}
         >
@@ -113,18 +113,18 @@ function SortableColumn({
         <input
           value={column.title}
           onChange={(e) => onRename(column.id, e.target.value)}
-          className="w-full bg-transparent font-semibold outline-none"
+          className="w-full bg-transparent font-display text-sm font-bold tracking-tight outline-none"
         />
         <button
           type="button"
-          className="text-xs text-coral/70"
+          className="text-xs text-mute hover:text-danger"
           onClick={() => onDelete(column.id)}
         >
           ✕
         </button>
       </div>
       <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
-        <div className="flex min-h-[40px] flex-col gap-2">
+        <div className="flex min-h-[48px] flex-col gap-2.5">
           {cards.map((c) => (
             <SortableCard key={c.id} card={c} onOpen={onOpenCard} />
           ))}
@@ -142,8 +142,8 @@ function SortableColumn({
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="+ Añadir tarjeta"
-          className="w-full rounded-xl border border-dashed border-ink/20 bg-white/70 px-3 py-2 text-sm outline-none focus:border-moss"
+          placeholder="+ Nueva tarjeta"
+          className="w-full rounded-lg border border-dashed border-neutral-300 bg-transparent px-3 py-2.5 text-sm outline-none transition placeholder:text-mute/70 focus:border-neutral-400 focus:bg-neutral-50"
         />
       </form>
     </div>
@@ -406,40 +406,37 @@ export function BoardPage() {
   if (!board) {
     return (
       <div>
-        <Link to="/" className="text-sm text-moss">
+        <Link to="/" className="text-sm font-semibold text-ink">
           ← Tableros
         </Link>
-        <p className="mt-4 text-ink/50">Cargando tablero…</p>
+        <p className="mt-4 text-mute">Cargando tablero…</p>
       </div>
     )
   }
 
   return (
-    <div className="-mx-4 space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 px-4">
-        <div>
-          <Link to="/" className="text-sm text-moss hover:underline">
-            ← Tableros
-          </Link>
-          <h1 className="font-display text-3xl" style={{ color: board.color }}>
-            {board.name}
-          </h1>
-        </div>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setShowDesc(true)}
-            className="rounded-xl border border-ink/15 bg-white px-3 py-2 text-sm"
-          >
-            Descripción
-          </button>
-          <button
-            type="button"
-            onClick={() => void addColumn()}
-            className="rounded-xl bg-moss px-3 py-2 text-sm font-semibold text-white"
-          >
-            + Columna
-          </button>
+    <div className="-mx-4 space-y-4 sm:-mx-6">
+      <div className="board-stage border-y border-line/60 px-4 py-5 sm:px-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <Link to="/" className="text-sm font-semibold text-ink hover:underline">
+              ← Tableros
+            </Link>
+            <h1
+              className="mt-1 font-display text-4xl font-extrabold tracking-tight"
+              style={{ color: board.color }}
+            >
+              {board.name}
+            </h1>
+          </div>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setShowDesc(true)} className="btn-ghost">
+              Descripción
+            </button>
+            <button type="button" onClick={() => void addColumn()} className="btn-primary">
+              + Columna
+            </button>
+          </div>
         </div>
       </div>
 
@@ -454,7 +451,7 @@ export function BoardPage() {
           items={columns.map((c) => c.id)}
           strategy={horizontalListSortingStrategy}
         >
-          <div className="flex gap-3 overflow-x-auto px-4 pb-8">
+          <div className="flex gap-4 overflow-x-auto px-4 pb-10 sm:px-6">
             {columns.map((col) => (
               <SortableColumn
                 key={col.id}
@@ -471,8 +468,8 @@ export function BoardPage() {
         <DragOverlay>
           {activeCard ? (
             <div
-              className="w-72 rounded-xl bg-white p-3 text-sm shadow-lg"
-              style={{ borderLeft: `4px solid ${activeCard.color || '#cbd5e1'}` }}
+              className="w-[300px] rounded-lg border border-neutral-300 bg-surface p-3.5 text-sm font-semibold shadow-lg"
+              style={{ borderLeft: `4px solid ${activeCard.color || '#94a3b8'}` }}
             >
               {activeCard.title}
             </div>
@@ -482,16 +479,16 @@ export function BoardPage() {
 
       {editCard && (
         <Modal title="Tarjeta" onClose={() => setEditCard(null)} wide>
-          <form className="space-y-3" onSubmit={saveCard}>
-            <label className="block text-sm">
+          <form className="space-y-4" onSubmit={saveCard}>
+            <label className="block text-sm font-medium">
               Título
               <input
                 value={editCard.title}
                 onChange={(e) => setEditCard({ ...editCard, title: e.target.value })}
-                className="mt-1 w-full rounded-xl border border-ink/15 px-3 py-2"
+                className="field"
               />
             </label>
-            <label className="block text-sm">
+            <label className="block text-sm font-medium">
               Descripción (Markdown)
               <textarea
                 rows={5}
@@ -499,11 +496,11 @@ export function BoardPage() {
                 onChange={(e) =>
                   setEditCard({ ...editCard, description_md: e.target.value })
                 }
-                className="mt-1 w-full rounded-xl border border-ink/15 px-3 py-2 font-mono text-xs"
+                className="field font-mono text-xs"
               />
             </label>
             <div className="grid grid-cols-2 gap-3">
-              <label className="block text-sm">
+              <label className="block text-sm font-medium">
                 Fecha
                 <input
                   type="date"
@@ -511,10 +508,10 @@ export function BoardPage() {
                   onChange={(e) =>
                     setEditCard({ ...editCard, due_date: e.target.value || null })
                   }
-                  className="mt-1 w-full rounded-xl border border-ink/15 px-3 py-2"
+                  className="field"
                 />
               </label>
-              <label className="flex items-end gap-2 pb-2 text-sm">
+              <label className="flex items-end gap-2 pb-3 text-sm font-medium">
                 <input
                   type="checkbox"
                   checked={editCard.done}
@@ -524,12 +521,12 @@ export function BoardPage() {
               </label>
             </div>
             <div>
-              <p className="mb-2 text-sm">Color</p>
+              <p className="mb-2 text-sm font-medium">Color</p>
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => setEditCard({ ...editCard, color: null })}
-                  className="h-8 w-8 rounded-full border border-ink/20 bg-white"
+                  className="h-8 w-8 rounded-lg border border-line bg-surface"
                   title="Sin color"
                 />
                 {CARD_COLORS.map((c) => (
@@ -537,7 +534,7 @@ export function BoardPage() {
                     key={c}
                     type="button"
                     onClick={() => setEditCard({ ...editCard, color: c })}
-                    className={`h-8 w-8 rounded-full ${
+                    className={`h-8 w-8 rounded-lg ${
                       editCard.color === c ? 'ring-2 ring-offset-2 ring-ink' : ''
                     }`}
                     style={{ background: c }}
@@ -546,22 +543,15 @@ export function BoardPage() {
               </div>
             </div>
             {editCard.description_md && (
-              <div className="rounded-xl bg-sand p-3">
+              <div className="rounded-xl bg-canvas p-3">
                 <Markdown source={editCard.description_md} />
               </div>
             )}
             <div className="flex gap-2">
-              <button
-                type="submit"
-                className="flex-1 rounded-xl bg-moss py-2.5 text-sm font-semibold text-white"
-              >
+              <button type="submit" className="btn-primary flex-1">
                 Guardar
               </button>
-              <button
-                type="button"
-                onClick={() => void deleteCard()}
-                className="rounded-xl border border-coral/40 px-4 py-2.5 text-sm text-coral"
-              >
+              <button type="button" onClick={() => void deleteCard()} className="btn-danger">
                 Borrar
               </button>
             </div>
@@ -575,15 +565,15 @@ export function BoardPage() {
             rows={10}
             value={boardDesc}
             onChange={(e) => setBoardDesc(e.target.value)}
-            className="w-full rounded-xl border border-ink/15 px-3 py-2 font-mono text-xs"
+            className="field font-mono text-xs"
           />
-          <div className="mt-3 rounded-xl bg-sand p-3">
+          <div className="mt-3 rounded-xl bg-canvas p-3">
             <Markdown source={boardDesc} />
           </div>
           <button
             type="button"
             onClick={() => void saveBoardDesc()}
-            className="mt-3 w-full rounded-xl bg-moss py-2.5 text-sm font-semibold text-white"
+            className="btn-primary mt-4 w-full"
           >
             Guardar descripción
           </button>

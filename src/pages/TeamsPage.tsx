@@ -2,13 +2,11 @@ import type { FormEvent } from 'react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { useAuth } from '../contexts/AuthContext'
-import { Modal } from '../components/Modal'
+import { Modal, PageHeader } from '../components/Modal'
 import { Markdown } from '../components/Markdown'
 import type { Profile, Team, TeamMember } from '../lib/types'
 
 export function TeamsPage() {
-  const { profile } = useAuth()
   const [teams, setTeams] = useState<Team[]>([])
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
@@ -29,12 +27,19 @@ export function TeamsPage() {
   async function createTeam(e: FormEvent) {
     e.preventDefault()
     setError(null)
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) {
+      setError('Sesión no válida. Vuelve a iniciar sesión.')
+      return
+    }
     const { data, error: err } = await supabase
       .from('teams')
       .insert({
         name: name.trim(),
         description_md: description,
-        created_by: profile?.id,
+        created_by: user.id,
       })
       .select('*')
       .single()
@@ -42,10 +47,10 @@ export function TeamsPage() {
       setError(err.message)
       return
     }
-    if (profile && data) {
+    if (data) {
       await supabase.from('team_members').insert({
         team_id: (data as Team).id,
-        user_id: profile.id,
+        user_id: user.id,
         role: 'lead',
       })
     }
@@ -61,77 +66,77 @@ export function TeamsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-display text-3xl text-moss-deep">Equipos</h1>
-          <p className="mt-1 text-sm text-ink/60">
-            Organiza grupos con descripción en Markdown y asígnalos a tableros.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="rounded-xl bg-moss px-4 py-2.5 text-sm font-semibold text-white hover:bg-moss-deep"
-        >
-          Nuevo equipo
-        </button>
-      </div>
+    <div>
+      <PageHeader
+        title="Equipos"
+        subtitle="Grupos con descripción Markdown. Asígnanos a tableros para compartir acceso."
+        action={
+          <button type="button" onClick={() => setOpen(true)} className="btn-primary">
+            Nuevo equipo
+          </button>
+        }
+      />
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {teams.map((t) => (
+      <div className="grid gap-4 md:grid-cols-2">
+        {teams.map((t, i) => (
           <article
             key={t.id}
-            className="rounded-2xl border border-ink/10 bg-white p-5 shadow-sm"
+            className={`animate-fade-up rounded-xl border border-line bg-surface p-6 transition hover:border-neutral-400 stagger-${Math.min(i + 1, 3)}`}
           >
-            <div className="flex items-start justify-between gap-2">
-              <Link to={`/teams/${t.id}`} className="font-display text-xl text-moss-deep hover:underline">
+            <div className="flex items-start justify-between gap-3">
+              <Link
+                to={`/teams/${t.id}`}
+                className="font-display text-2xl font-bold tracking-tight text-ink hover:opacity-70"
+              >
                 {t.name}
               </Link>
               <button
                 type="button"
                 onClick={() => void removeTeam(t.id)}
-                className="text-xs text-coral/80 hover:text-coral"
+                className="text-xs font-medium text-mute hover:text-danger"
               >
                 Borrar
               </button>
             </div>
-            <div className="mt-3 max-h-40 overflow-hidden">
+            <div className="mt-4 max-h-36 overflow-hidden">
               <Markdown source={t.description_md} />
             </div>
+            <Link
+              to={`/teams/${t.id}`}
+              className="mt-5 inline-flex text-sm font-semibold text-ink hover:underline"
+            >
+              Gestionar →
+            </Link>
           </article>
         ))}
         {!teams.length && (
-          <p className="text-sm text-ink/50">Aún no hay equipos. Crea el primero.</p>
+          <p className="animate-fade-up text-sm text-mute">Aún no hay equipos.</p>
         )}
       </div>
 
       {open && (
         <Modal title="Nuevo equipo" onClose={() => setOpen(false)} wide>
-          <form className="space-y-3" onSubmit={createTeam}>
-            <label className="block text-sm">
+          <form className="space-y-4" onSubmit={createTeam}>
+            <label className="block text-sm font-medium">
               Nombre
               <input
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-ink/15 px-3 py-2"
+                className="field"
               />
             </label>
-            <label className="block text-sm">
+            <label className="block text-sm font-medium">
               Descripción (Markdown)
               <textarea
                 rows={8}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-ink/15 px-3 py-2 font-mono text-xs"
+                className="field font-mono text-xs"
               />
             </label>
-            {error && <p className="text-sm text-coral">{error}</p>}
-            <button
-              type="submit"
-              className="w-full rounded-xl bg-moss py-2.5 text-sm font-semibold text-white"
-            >
+            {error && <p className="text-sm text-danger">{error}</p>}
+            <button type="submit" className="btn-primary w-full !py-3">
               Crear
             </button>
           </form>
@@ -191,21 +196,23 @@ export function TeamDetailPage({ teamId }: { teamId: string }) {
     await load()
   }
 
-  if (!team) return <p className="text-ink/50">Cargando…</p>
+  if (!team) return <p className="text-mute">Cargando…</p>
 
   return (
-    <div className="space-y-6">
-      <Link to="/teams" className="text-sm text-moss hover:underline">
+    <div className="animate-fade-up space-y-6">
+      <Link to="/teams" className="text-sm font-semibold text-ink hover:underline">
         ← Equipos
       </Link>
-      <h1 className="font-display text-3xl text-moss-deep">{team.name}</h1>
+      <h1 className="font-display text-4xl font-extrabold tracking-tight text-ink sm:text-5xl">
+        {team.name}
+      </h1>
 
-      <section className="rounded-2xl border border-ink/10 bg-white p-5">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-display text-xl">Descripción</h2>
+      <section className="rounded-xl border border-line bg-surface p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="font-display text-xl font-bold">Descripción</h2>
           <button
             type="button"
-            className="text-sm text-moss underline"
+            className="btn-ghost !py-1.5 !text-xs"
             onClick={() => (editing ? void saveDescription() : setEditing(true))}
           >
             {editing ? 'Guardar' : 'Editar'}
@@ -216,25 +223,25 @@ export function TeamDetailPage({ teamId }: { teamId: string }) {
             rows={10}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full rounded-xl border border-ink/15 px-3 py-2 font-mono text-xs"
+            className="field font-mono text-xs"
           />
         ) : (
           <Markdown source={team.description_md} />
         )}
       </section>
 
-      <section className="rounded-2xl border border-ink/10 bg-white p-5">
-        <h2 className="mb-3 font-display text-xl">Miembros</h2>
-        <ul className="space-y-2 text-sm">
+      <section className="rounded-xl border border-line bg-surface p-6">
+        <h2 className="mb-4 font-display text-xl font-bold">Miembros</h2>
+        <ul className="divide-y divide-line">
           {members.map((m) => (
-            <li key={m.user_id} className="flex items-center justify-between gap-2">
+            <li key={m.user_id} className="flex items-center justify-between gap-2 py-3 text-sm">
               <span>
-                {m.profile?.full_name || m.user_id}{' '}
-                <span className="text-ink/45">({m.role})</span>
+                <span className="font-semibold">{m.profile?.full_name || m.user_id}</span>
+                <span className="ml-2 text-mute">({m.role})</span>
               </span>
               <button
                 type="button"
-                className="text-coral/80"
+                className="text-xs text-danger"
                 onClick={() => void removeMember(m.user_id)}
               >
                 Quitar
@@ -242,11 +249,11 @@ export function TeamDetailPage({ teamId }: { teamId: string }) {
             </li>
           ))}
         </ul>
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-5 flex flex-wrap gap-2">
           <select
             value={addUserId}
             onChange={(e) => setAddUserId(e.target.value)}
-            className="rounded-xl border border-ink/15 px-3 py-2 text-sm"
+            className="field !mt-0 max-w-xs"
           >
             <option value="">Agregar usuario…</option>
             {users
@@ -257,11 +264,7 @@ export function TeamDetailPage({ teamId }: { teamId: string }) {
                 </option>
               ))}
           </select>
-          <button
-            type="button"
-            onClick={() => void addMember()}
-            className="rounded-xl bg-moss px-3 py-2 text-sm font-semibold text-white"
-          >
+          <button type="button" onClick={() => void addMember()} className="btn-primary">
             Agregar
           </button>
         </div>

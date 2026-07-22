@@ -47,56 +47,54 @@ export function InvitePage() {
   }
 
   if (loading) {
-    return <p className="p-8 text-center text-ink/60">Cargando invitación…</p>
+    return <p className="p-10 text-center text-mute">Cargando invitación…</p>
   }
 
   return (
-    <div className="flex min-h-full items-center justify-center bg-sand px-4 py-10">
-      <div className="w-full max-w-md rounded-3xl border border-ink/10 bg-white p-8 shadow-lg">
-        <h1 className="font-display text-3xl text-moss-deep">Activar cuenta</h1>
+    <div className="flex min-h-full items-center justify-center bg-[#f5f5f5] px-4 py-12">
+      <div className="animate-fade-up w-full max-w-md rounded-xl border border-line bg-white p-8">
+        <h1 className="font-display text-3xl font-extrabold tracking-tight text-ink">
+          Activar cuenta
+        </h1>
         {invite ? (
           <>
-            <p className="mt-2 text-sm text-ink/65">
-              Invitación para <strong>{invite.email}</strong>
+            <p className="mt-2 text-sm text-mute">
+              Invitación para <strong className="text-ink">{invite.email}</strong>
             </p>
             <form className="mt-6 space-y-4" onSubmit={onSubmit}>
-              <label className="block text-sm">
-                <span className="mb-1 block text-ink/70">Nombre</span>
+              <label className="block text-sm font-medium">
+                Nombre
                 <input
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full rounded-xl border border-ink/15 px-3 py-2.5 outline-none ring-moss focus:ring-2"
+                  className="field"
                 />
               </label>
-              <label className="block text-sm">
-                <span className="mb-1 block text-ink/70">Contraseña</span>
+              <label className="block text-sm font-medium">
+                Contraseña
                 <input
                   type="password"
                   required
                   minLength={6}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-xl border border-ink/15 px-3 py-2.5 outline-none ring-moss focus:ring-2"
+                  className="field"
                 />
               </label>
               {error && (
-                <p className="rounded-lg bg-coral/10 px-3 py-2 text-sm text-coral">{error}</p>
+                <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-danger">{error}</p>
               )}
-              <button
-                type="submit"
-                disabled={busy}
-                className="w-full rounded-xl bg-moss px-4 py-3 text-sm font-semibold text-white hover:bg-moss-deep disabled:opacity-50"
-              >
+              <button type="submit" disabled={busy} className="btn-primary w-full !py-3">
                 {busy ? 'Creando…' : 'Crear cuenta'}
               </button>
             </form>
           </>
         ) : (
-          <p className="mt-4 text-coral">{error || 'Invitación no válida.'}</p>
+          <p className="mt-4 text-danger">{error || 'Invitación no válida.'}</p>
         )}
-        <p className="mt-5 text-center text-sm">
-          <Link to="/login" className="text-moss underline">
+        <p className="mt-6 text-center text-sm">
+          <Link to="/login" className="font-semibold text-ink hover:underline">
             Ir al login
           </Link>
         </p>

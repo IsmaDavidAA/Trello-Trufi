@@ -1,50 +1,83 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
-const linkClass = ({ isActive }: { isActive: boolean }) =>
-  `rounded-lg px-3 py-2 text-sm font-medium transition ${
-    isActive ? 'bg-moss text-white' : 'text-ink/70 hover:bg-white/70 hover:text-ink'
+const navClass = ({ isActive }: { isActive: boolean }) =>
+  `relative px-3 py-2 text-sm font-semibold tracking-tight transition ${
+    isActive
+      ? 'text-ink after:absolute after:inset-x-3 after:bottom-0 after:h-px after:bg-ink'
+      : 'text-mute hover:text-ink'
   }`
 
 export function Layout() {
   const { profile, isAdmin, signOut } = useAuth()
+  const initials = (profile?.full_name || profile?.email || '?')
+    .split(/\s|@/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join('')
 
   return (
-    <div className="min-h-full bg-sand">
-      <header className="sticky top-0 z-40 border-b border-ink/10 bg-sand/90 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
-          <Link to="/" className="font-display text-2xl tracking-tight text-moss-deep">
-            Trufi Board
+    <div className="min-h-full">
+      <header className="sticky top-0 z-40 border-b border-line/70 bg-canvas/75 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-[1400px] items-center gap-6 px-4 py-3.5 sm:px-6">
+          <Link to="/" className="group flex items-center gap-2.5">
+            <span className="grid h-9 w-9 place-items-center rounded-lg bg-ink text-[11px] font-bold tracking-wider text-white">
+              TB
+            </span>
+            <span className="font-display text-xl font-extrabold tracking-tight text-ink">
+              Trufi Board
+            </span>
           </Link>
-          <nav className="flex flex-wrap items-center gap-1">
-            <NavLink to="/" end className={linkClass}>
+
+          <nav className="hidden items-center gap-1 md:flex">
+            <NavLink to="/" end className={navClass}>
               Tableros
             </NavLink>
-            <NavLink to="/teams" className={linkClass}>
+            <NavLink to="/teams" className={navClass}>
               Equipos
             </NavLink>
             {isAdmin && (
-              <NavLink to="/admin/users" className={linkClass}>
+              <NavLink to="/admin/users" className={navClass}>
                 Usuarios
               </NavLink>
             )}
           </nav>
-          <div className="flex items-center gap-3 text-sm">
-            <span className="hidden text-ink/60 sm:inline">
-              {profile?.full_name || profile?.email}
-              {isAdmin ? ' · admin' : ''}
-            </span>
-            <button
-              type="button"
-              onClick={() => void signOut()}
-              className="rounded-lg border border-ink/15 px-3 py-1.5 hover:bg-white"
-            >
+
+          <div className="ml-auto flex items-center gap-3">
+            <div className="hidden text-right sm:block">
+              <p className="text-sm font-semibold leading-tight text-ink">
+                {profile?.full_name || 'Usuario'}
+              </p>
+              <p className="text-[11px] uppercase tracking-[0.14em] text-mute">
+                {isAdmin ? 'Admin' : 'Miembro'}
+              </p>
+            </div>
+            <div className="grid h-9 w-9 place-items-center rounded-lg bg-neutral-200 text-xs font-bold text-ink">
+              {initials}
+            </div>
+            <button type="button" onClick={() => void signOut()} className="btn-ghost !py-2">
               Salir
             </button>
           </div>
         </div>
+
+        <nav className="flex gap-1 overflow-x-auto border-t border-line/60 px-4 py-1 md:hidden">
+          <NavLink to="/" end className={navClass}>
+            Tableros
+          </NavLink>
+          <NavLink to="/teams" className={navClass}>
+            Equipos
+          </NavLink>
+          {isAdmin && (
+            <NavLink to="/admin/users" className={navClass}>
+              Usuarios
+            </NavLink>
+          )}
+        </nav>
       </header>
-      <main className="mx-auto max-w-7xl px-4 py-6">
+
+      <main className="mx-auto max-w-[1400px] px-4 py-8 sm:px-6">
         <Outlet />
       </main>
     </div>

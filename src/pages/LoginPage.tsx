@@ -1,6 +1,6 @@
 import type { FormEvent } from 'react'
 import { useState } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
 export function LoginPage() {
@@ -22,62 +22,83 @@ export function LoginPage() {
   }
 
   return (
-    <div className="relative flex min-h-full items-center justify-center overflow-hidden px-4 py-10">
+    <div className="relative flex min-h-full bg-[#f5f5f5]">
       <div
-        className="absolute inset-0"
+        className="pointer-events-none absolute inset-0 opacity-[0.35]"
         style={{
-          background:
-            'radial-gradient(ellipse at 20% 10%, rgba(14,165,233,0.25), transparent 45%), radial-gradient(ellipse at 80% 0%, rgba(217,119,6,0.22), transparent 40%), linear-gradient(160deg, #0a4f4a 0%, #0c1f1a 55%, #12352e 100%)',
+          backgroundImage:
+            'linear-gradient(#e5e5e5 1px, transparent 1px), linear-gradient(90deg, #e5e5e5 1px, transparent 1px)',
+          backgroundSize: '64px 64px',
+          maskImage: 'radial-gradient(ellipse at center, black 20%, transparent 75%)',
         }}
       />
-      <div className="relative w-full max-w-md rounded-3xl bg-sand p-8 shadow-2xl">
-        <p className="font-display text-4xl text-moss-deep">Trufi Board</p>
-        <p className="mt-2 text-sm text-ink/65">
-          Gestión del equipo Trufi. Acceso solo con cuenta creada por un admin.
-        </p>
 
-        {!configured && (
-          <p className="mt-4 rounded-xl bg-coral/10 px-3 py-2 text-sm text-coral">
-            Falta configurar <code>VITE_SUPABASE_URL</code> y{' '}
-            <code>VITE_SUPABASE_ANON_KEY</code> en <code>.env</code>.
+      <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col justify-center gap-12 px-6 py-16 lg:flex-row lg:items-center lg:gap-24">
+        <div className="animate-fade-up max-w-md">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-mute">
+            Equipo Trufi
           </p>
-        )}
+          <h1 className="mt-3 font-display text-5xl font-extrabold leading-[0.95] tracking-tight text-ink sm:text-6xl">
+            Trufi
+            <br />
+            Board
+          </h1>
+          <p className="mt-5 text-sm leading-relaxed text-mute">
+            Workspace minimalista para tableros, equipos y tareas. Acceso solo con
+            invitación.
+          </p>
+        </div>
 
-        <form className="mt-6 space-y-4" onSubmit={onSubmit}>
-          <label className="block text-sm">
-            <span className="mb-1 block text-ink/70">Correo</span>
+        <form
+          onSubmit={onSubmit}
+          className="animate-fade-up stagger-2 w-full max-w-md rounded-xl border border-line bg-surface p-7 sm:p-8"
+        >
+          <h2 className="font-display text-xl font-bold tracking-tight text-ink">
+            Iniciar sesión
+          </h2>
+          <p className="mt-1 text-sm text-mute">Usa la cuenta asignada por el admin.</p>
+
+          {!configured && (
+            <p className="mt-4 rounded-lg bg-neutral-100 px-3 py-2 text-sm text-danger">
+              Falta configurar las variables de Supabase en <code>.env</code>.
+            </p>
+          )}
+
+          <label className="mt-6 block text-sm font-medium text-ink">
+            Correo
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-xl border border-ink/15 bg-white px-3 py-2.5 outline-none ring-moss focus:ring-2"
+              className="field"
+              placeholder="tu@trufi.org"
             />
           </label>
-          <label className="block text-sm">
-            <span className="mb-1 block text-ink/70">Contraseña</span>
+          <label className="mt-4 block text-sm font-medium text-ink">
+            Contraseña
             <input
               type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-xl border border-ink/15 bg-white px-3 py-2.5 outline-none ring-moss focus:ring-2"
+              className="field"
+              placeholder="••••••••"
             />
           </label>
+
           {error && (
-            <p className="rounded-lg bg-coral/10 px-3 py-2 text-sm text-coral">{error}</p>
+            <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-danger">{error}</p>
           )}
+
           <button
             type="submit"
             disabled={busy || !configured}
-            className="w-full rounded-xl bg-moss px-4 py-3 text-sm font-semibold text-white hover:bg-moss-deep disabled:opacity-50"
+            className="btn-primary mt-6 w-full !py-3"
           >
             {busy ? 'Entrando…' : 'Entrar'}
           </button>
         </form>
-        <p className="mt-5 text-center text-xs text-ink/50">
-          ¿Te invitaron? Usa el enlace del admin. <Link to="/">Inicio</Link>
-        </p>
       </div>
     </div>
   )
