@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Fraunces", Georgia, serif;
+  --font-sans: "Sora", ui-sans-serif, system-ui, sans-serif;
+  --color-ink: #0c1f1a;
+  --color-moss: #0f766e;
+  --color-moss-deep: #0a4f4a;
+  --color-sand: #f3efe6;
+  --color-amber: #d97706;
+  --color-coral: #e11d48;
+  --color-sky: #0ea5e9;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background: var(--color-sand);
+  -webkit-font-smoothing: antialiased;
+}
+
+.prose-trufi {
+  line-height: 1.65;
+}
+
+.prose-trufi h1,
+.prose-trufi h2,
+.prose-trufi h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  margin: 1rem 0 0.5rem;
+}
+
+.prose-trufi a {
+  color: var(--color-moss);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.prose-trufi ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+}
+
+.prose-trufi code {
+  background: rgba(15, 118, 110, 0.1);
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.25rem;
+  font-size: 0.9em;
+}
