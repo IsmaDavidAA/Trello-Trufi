@@ -25,7 +25,7 @@ export function Layout() {
             <span className="grid h-9 w-9 place-items-center rounded-lg bg-ink text-[11px] font-bold tracking-wider text-white">
               TB
             </span>
-            <span className="font-display text-xl font-extrabold tracking-tight text-ink">
+            <span className="font-display text-xl font-semibold text-ink">
               Trufi Board
             </span>
           </Link>
@@ -33,6 +33,12 @@ export function Layout() {
           <nav className="hidden items-center gap-1 md:flex">
             <NavLink to="/" end className={navClass}>
               Tableros
+            </NavLink>
+            <NavLink to="/gantt" className={navClass}>
+              Gantt
+            </NavLink>
+            <NavLink to="/data" className={navClass}>
+              Datos
             </NavLink>
             <NavLink to="/teams" className={navClass}>
               Equipos
@@ -65,6 +71,12 @@ export function Layout() {
         <nav className="flex gap-1 overflow-x-auto border-t border-line/60 px-4 py-1 md:hidden">
           <NavLink to="/" end className={navClass}>
             Tableros
+          </NavLink>
+          <NavLink to="/gantt" className={navClass}>
+            Gantt
+          </NavLink>
+          <NavLink to="/data" className={navClass}>
+            Datos
           </NavLink>
           <NavLink to="/teams" className={navClass}>
             Equipos

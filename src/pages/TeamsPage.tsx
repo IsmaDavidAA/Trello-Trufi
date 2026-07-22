@@ -86,7 +86,7 @@ export function TeamsPage() {
             <div className="flex items-start justify-between gap-3">
               <Link
                 to={`/teams/${t.id}`}
-                className="font-display text-2xl font-bold tracking-tight text-ink hover:opacity-70"
+                className="font-display text-2xl font-semibold text-ink hover:opacity-70"
               >
                 {t.name}
               </Link>
@@ -203,13 +203,13 @@ export function TeamDetailPage({ teamId }: { teamId: string }) {
       <Link to="/teams" className="text-sm font-semibold text-ink hover:underline">
         ← Equipos
       </Link>
-      <h1 className="font-display text-4xl font-extrabold tracking-tight text-ink sm:text-5xl">
+      <h1 className="font-display text-4xl font-semibold text-ink sm:text-5xl">
         {team.name}
       </h1>
 
       <section className="rounded-xl border border-line bg-surface p-6">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-display text-xl font-bold">Descripción</h2>
+          <h2 className="font-display text-xl font-semibold">Descripción</h2>
           <button
             type="button"
             className="btn-ghost !py-1.5 !text-xs"
@@ -231,7 +231,7 @@ export function TeamDetailPage({ teamId }: { teamId: string }) {
       </section>
 
       <section className="rounded-xl border border-line bg-surface p-6">
-        <h2 className="mb-4 font-display text-xl font-bold">Miembros</h2>
+        <h2 className="mb-4 font-display text-xl font-semibold">Miembros</h2>
         <ul className="divide-y divide-line">
           {members.map((m) => (
             <li key={m.user_id} className="flex items-center justify-between gap-2 py-3 text-sm">

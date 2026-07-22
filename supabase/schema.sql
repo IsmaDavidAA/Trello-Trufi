@@ -66,6 +66,7 @@ create table if not exists public.cards (
   title text not null,
   description_md text not null default '',
   color text,
+  priority text check (priority is null or priority in ('low', 'medium', 'high', 'urgent')),
   due_date date,
   done boolean not null default false,
   position int not null default 0,
@@ -273,10 +274,10 @@ create policy "boards_insert" on public.boards for insert to authenticated
     and (created_by is null or created_by = auth.uid())
   );
 create policy "boards_update" on public.boards for update to authenticated
-  using (public.can_access_board(id))
-  with check (public.can_access_board(id));
+  using (public.is_admin())
+  with check (public.is_admin());
 create policy "boards_delete" on public.boards for delete to authenticated
-  using (public.is_admin() or created_by = auth.uid());
+  using (public.is_admin());
 
 -- Columns
 create policy "columns_select" on public.columns for select to authenticated

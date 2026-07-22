@@ -90,22 +90,12 @@ create policy "boards_select" on public.boards
 
 create policy "boards_update" on public.boards
   for update to authenticated
-  using (
-    created_by = auth.uid()
-    or public.is_admin()
-    or public.is_team_member(team_id)
-    or public.owns_team(team_id)
-  )
-  with check (
-    created_by = auth.uid()
-    or public.is_admin()
-    or public.is_team_member(team_id)
-    or public.owns_team(team_id)
-  );
+  using (public.is_admin())
+  with check (public.is_admin());
 
 create policy "boards_delete" on public.boards
   for delete to authenticated
-  using (public.is_admin() or created_by = auth.uid());
+  using (public.is_admin());
 
 -- Columns: permitir si puedes ver el board
 drop policy if exists "columns_select" on public.columns;

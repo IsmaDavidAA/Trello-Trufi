@@ -38,7 +38,7 @@ export function LoginPage() {
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-mute">
             Equipo Trufi
           </p>
-          <h1 className="mt-3 font-display text-5xl font-extrabold leading-[0.95] tracking-tight text-ink sm:text-6xl">
+          <h1 className="mt-3 font-display text-5xl font-semibold leading-[1.1] text-ink sm:text-6xl">
             Trufi
             <br />
             Board
@@ -53,7 +53,7 @@ export function LoginPage() {
           onSubmit={onSubmit}
           className="animate-fade-up stagger-2 w-full max-w-md rounded-xl border border-line bg-surface p-7 sm:p-8"
         >
-          <h2 className="font-display text-xl font-bold tracking-tight text-ink">
+          <h2 className="font-display text-xl font-semibold text-ink">
             Iniciar sesión
           </h2>
           <p className="mt-1 text-sm text-mute">Usa la cuenta asignada por el admin.</p>

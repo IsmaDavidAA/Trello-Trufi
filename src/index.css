@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-display: "Syne", sans-serif;
-  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Source Serif 4", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --font-sans: "Source Sans 3", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
   --color-ink: #171717;
   --color-mute: #737373;
   --color-line: #e5e5e5;
@@ -160,10 +160,10 @@ body {
 .prose-trufi h2,
 .prose-trufi h3 {
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--color-ink);
   margin: 0.85rem 0 0.4rem;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 .prose-trufi a {

@@ -53,7 +53,7 @@ export function InvitePage() {
   return (
     <div className="flex min-h-full items-center justify-center bg-[#f5f5f5] px-4 py-12">
       <div className="animate-fade-up w-full max-w-md rounded-xl border border-line bg-white p-8">
-        <h1 className="font-display text-3xl font-extrabold tracking-tight text-ink">
+        <h1 className="font-display text-3xl font-semibold text-ink">
           Activar cuenta
         </h1>
         {invite ? (

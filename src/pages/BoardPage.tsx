@@ -24,7 +24,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { Modal } from '../components/Modal'
 import { Markdown } from '../components/Markdown'
-import { CARD_COLORS, type Board, type Card, type Column, type Profile } from '../lib/types'
+import { BOARD_COLORS, CARD_COLORS, PRIORITIES, priorityMeta, type Board, type Card, type Column, type Profile, type Team } from '../lib/types'
 import { initialsOf } from '../lib/urls'
 
 function SortableCard({
@@ -44,6 +44,7 @@ function SortableCard({
     opacity: isDragging ? 0.4 : 1,
     borderLeft: `4px solid ${card.color || '#d4d4d4'}`,
   }
+  const prio = priorityMeta(card.priority)
   return (
     <button
       type="button"
@@ -60,11 +61,21 @@ function SortableCard({
         <span className={card.done ? 'font-medium line-through text-mute' : 'font-semibold text-ink'}>
           {card.title}
         </span>
-        {card.done && (
-          <span className="rounded-md bg-neutral-200 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-mute">
-            done
-          </span>
-        )}
+        <div className="flex shrink-0 items-center gap-1">
+          {prio && (
+            <span
+              className="rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white"
+              style={{ background: prio.color }}
+            >
+              {prio.label}
+            </span>
+          )}
+          {card.done && (
+            <span className="rounded-md bg-neutral-200 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-mute">
+              done
+            </span>
+          )}
+        </div>
       </div>
       {card.due_date && (
         <p className="mt-2 text-xs font-medium text-mute">{card.due_date}</p>
@@ -133,7 +144,7 @@ function SortableColumn({
         <input
           value={column.title}
           onChange={(e) => onRename(column.id, e.target.value)}
-          className="w-full bg-transparent font-display text-sm font-bold tracking-tight outline-none"
+          className="w-full bg-transparent font-display text-sm font-semibold outline-none"
         />
         <button
           type="button"
@@ -179,8 +190,9 @@ function SortableColumn({
 
 export function BoardPage() {
   const { boardId } = useParams()
-  const { profile } = useAuth()
+  const { profile, isAdmin } = useAuth()
   const [board, setBoard] = useState<Board | null>(null)
+  const [teams, setTeams] = useState<Team[]>([])
   const [columns, setColumns] = useState<Column[]>([])
   const [cards, setCards] = useState<Card[]>([])
   const [activeCard, setActiveCard] = useState<Card | null>(null)
@@ -189,7 +201,13 @@ export function BoardPage() {
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [assigneesByCard, setAssigneesByCard] = useState<Record<string, string[]>>({})
   const [showDesc, setShowDesc] = useState(false)
+  const [showBoardEdit, setShowBoardEdit] = useState(false)
+  const [boardName, setBoardName] = useState('')
   const [boardDesc, setBoardDesc] = useState('')
+  const [boardColor, setBoardColor] = useState('#525252')
+  const [boardTeamId, setBoardTeamId] = useState('')
+  const [boardError, setBoardError] = useState<string | null>(null)
+  const [boardSaving, setBoardSaving] = useState(false)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
 
@@ -214,10 +232,11 @@ export function BoardPage() {
 
   async function load() {
     if (!boardId) return
-    const [{ data: b }, { data: cols }, { data: prof }] = await Promise.all([
+    const [{ data: b }, { data: cols }, { data: prof }, { data: teamRows }] = await Promise.all([
       supabase.from('boards').select('*').eq('id', boardId).maybeSingle(),
       supabase.from('columns').select('*').eq('board_id', boardId).order('position'),
       supabase.from('profiles').select('*').order('full_name'),
+      supabase.from('teams').select('*').order('name'),
     ])
     const colList = (cols as Column[]) || []
     const colIds = colList.map((c) => c.id)
@@ -244,8 +263,13 @@ export function BoardPage() {
         assigneeMap[r.card_id].push(r.user_id)
       }
     }
-    setBoard((b as Board) || null)
-    setBoardDesc((b as Board)?.description_md || '')
+    const boardRow = (b as Board) || null
+    setBoard(boardRow)
+    setBoardName(boardRow?.name || '')
+    setBoardDesc(boardRow?.description_md || '')
+    setBoardColor(boardRow?.color || '#525252')
+    setBoardTeamId(boardRow?.team_id || '')
+    setTeams((teamRows as Team[]) || [])
     setColumns(colList)
     setCards(cardRows)
     setProfiles((prof as Profile[]) || [])
@@ -429,6 +453,7 @@ export function BoardPage() {
         title: editCard.title,
         description_md: editCard.description_md,
         color: editCard.color,
+        priority: editCard.priority,
         due_date: editCard.due_date,
         done: editCard.done,
         updated_at: new Date().toISOString(),
@@ -478,11 +503,42 @@ export function BoardPage() {
     )
   }
 
-  async function saveBoardDesc() {
-    if (!boardId) return
-    await supabase.from('boards').update({ description_md: boardDesc }).eq('id', boardId)
-    setBoard((b) => (b ? { ...b, description_md: boardDesc } : b))
-    setShowDesc(false)
+  async function saveBoardEdit(e: FormEvent) {
+    e.preventDefault()
+    if (!boardId || !isAdmin) return
+    setBoardError(null)
+    setBoardSaving(true)
+    try {
+      const { data, error } = await supabase
+        .from('boards')
+        .update({
+          name: boardName.trim(),
+          description_md: boardDesc,
+          color: boardColor,
+          team_id: boardTeamId || null,
+        })
+        .eq('id', boardId)
+        .select('*')
+        .single()
+      if (error) {
+        setBoardError(error.message)
+        return
+      }
+      setBoard(data as Board)
+      setShowBoardEdit(false)
+    } finally {
+      setBoardSaving(false)
+    }
+  }
+
+  function openBoardEdit() {
+    if (!board || !isAdmin) return
+    setBoardName(board.name)
+    setBoardDesc(board.description_md || '')
+    setBoardColor(board.color || '#525252')
+    setBoardTeamId(board.team_id || '')
+    setBoardError(null)
+    setShowBoardEdit(true)
   }
 
   if (!board) {
@@ -505,7 +561,7 @@ export function BoardPage() {
               ← Tableros
             </Link>
             <h1
-              className="mt-1 font-display text-4xl font-extrabold tracking-tight"
+              className="mt-1 font-display text-4xl font-semibold"
               style={{ color: board.color }}
             >
               {board.name}
@@ -515,6 +571,11 @@ export function BoardPage() {
             <button type="button" onClick={() => setShowDesc(true)} className="btn-ghost">
               Descripción
             </button>
+            {isAdmin && (
+              <button type="button" onClick={openBoardEdit} className="btn-ghost">
+                Editar tablero
+              </button>
+            )}
             <button type="button" onClick={() => void addColumn()} className="btn-primary">
               + Columna
             </button>
@@ -595,15 +656,35 @@ export function BoardPage() {
                   className="field"
                 />
               </label>
-              <label className="flex items-end gap-2 pb-3 text-sm font-medium">
-                <input
-                  type="checkbox"
-                  checked={editCard.done}
-                  onChange={(e) => setEditCard({ ...editCard, done: e.target.checked })}
-                />
-                Marcar como done
+              <label className="block text-sm font-medium">
+                Prioridad
+                <select
+                  value={editCard.priority || ''}
+                  onChange={(e) =>
+                    setEditCard({
+                      ...editCard,
+                      priority: (e.target.value || null) as Card['priority'],
+                    })
+                  }
+                  className="field"
+                >
+                  <option value="">Sin prioridad</option>
+                  {PRIORITIES.map((p) => (
+                    <option key={p.value} value={p.value}>
+                      {p.label}
+                    </option>
+                  ))}
+                </select>
               </label>
             </div>
+            <label className="flex items-center gap-2 text-sm font-medium">
+              <input
+                type="checkbox"
+                checked={editCard.done}
+                onChange={(e) => setEditCard({ ...editCard, done: e.target.checked })}
+              />
+              Marcar como done
+            </label>
             <div>
               <p className="mb-2 text-sm font-medium">Asignados</p>
               <div className="max-h-40 space-y-1 overflow-y-auto rounded-lg border border-line p-2">
@@ -675,24 +756,89 @@ export function BoardPage() {
         </Modal>
       )}
 
+      {showBoardEdit && isAdmin && (
+        <Modal title="Editar tablero" onClose={() => setShowBoardEdit(false)} wide>
+          <form className="space-y-4" onSubmit={saveBoardEdit}>
+            <label className="block text-sm font-medium">
+              Nombre
+              <input
+                required
+                value={boardName}
+                onChange={(e) => setBoardName(e.target.value)}
+                className="field"
+              />
+            </label>
+            <label className="block text-sm font-medium">
+              Equipo (opcional)
+              <select
+                value={boardTeamId}
+                onChange={(e) => setBoardTeamId(e.target.value)}
+                className="field"
+              >
+                <option value="">Sin equipo</option>
+                {teams.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-sm font-medium">
+              Color de acento
+              <div className="mt-2 flex flex-wrap gap-2">
+                {BOARD_COLORS.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setBoardColor(c)}
+                    className={`h-8 w-8 rounded-lg ${
+                      boardColor === c ? 'ring-2 ring-offset-2 ring-ink' : ''
+                    }`}
+                    style={{ background: c }}
+                  />
+                ))}
+              </div>
+              <input
+                type="color"
+                value={boardColor}
+                onChange={(e) => setBoardColor(e.target.value)}
+                className="field !mt-2 !h-12 !cursor-pointer !p-1"
+              />
+            </label>
+            <label className="block text-sm font-medium">
+              Descripción (Markdown)
+              <textarea
+                rows={6}
+                value={boardDesc}
+                onChange={(e) => setBoardDesc(e.target.value)}
+                className="field font-mono text-xs"
+              />
+            </label>
+            {boardError && <p className="text-sm text-danger">{boardError}</p>}
+            <button type="submit" className="btn-primary w-full" disabled={boardSaving}>
+              {boardSaving ? 'Guardando…' : 'Guardar cambios'}
+            </button>
+          </form>
+        </Modal>
+      )}
+
       {showDesc && (
         <Modal title="Descripción del tablero" onClose={() => setShowDesc(false)} wide>
-          <textarea
-            rows={10}
-            value={boardDesc}
-            onChange={(e) => setBoardDesc(e.target.value)}
-            className="field font-mono text-xs"
-          />
-          <div className="mt-3 rounded-xl bg-canvas p-3">
-            <Markdown source={boardDesc} />
+          <div className="rounded-xl bg-canvas p-3">
+            <Markdown source={board.description_md || '_Sin descripción_'} />
           </div>
-          <button
-            type="button"
-            onClick={() => void saveBoardDesc()}
-            className="btn-primary mt-4 w-full"
-          >
-            Guardar descripción
-          </button>
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => {
+                setShowDesc(false)
+                openBoardEdit()
+              }}
+              className="btn-primary mt-4 w-full"
+            >
+              Editar tablero
+            </button>
+          )}
         </Modal>
       )}
     </div>

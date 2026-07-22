@@ -25,7 +25,7 @@ export function Modal({
         }`}
       >
         <div className="mb-5 flex items-start justify-between gap-3">
-          <h2 className="font-display text-2xl font-bold tracking-tight text-ink">{title}</h2>
+          <h2 className="font-display text-2xl font-semibold text-ink">{title}</h2>
           <button
             type="button"
             onClick={onClose}
@@ -52,7 +52,7 @@ export function PageHeader({
   return (
     <div className="animate-fade-up mb-8 flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h1 className="font-display text-4xl font-extrabold tracking-tight text-ink sm:text-5xl">
+        <h1 className="font-display text-4xl font-semibold text-ink sm:text-5xl">
           {title}
         </h1>
         {subtitle && <p className="mt-2 max-w-xl text-sm text-mute">{subtitle}</p>}

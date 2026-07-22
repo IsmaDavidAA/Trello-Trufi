@@ -8,6 +8,8 @@ import { BoardsPage } from './pages/BoardsPage'
 import { BoardPage } from './pages/BoardPage'
 import { TeamsPage, TeamDetailPage } from './pages/TeamsPage'
 import { AdminUsersPage } from './pages/AdminUsersPage'
+import { GanttPage } from './pages/GanttPage'
+import { DataPage } from './pages/DataPage'
 
 function Protected({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth()
@@ -41,6 +43,8 @@ export default function App() {
           >
             <Route path="/" element={<BoardsPage />} />
             <Route path="/boards/:boardId" element={<BoardPage />} />
+            <Route path="/gantt" element={<GanttPage />} />
+            <Route path="/data" element={<DataPage />} />
             <Route path="/teams" element={<TeamsPage />} />
             <Route path="/teams/:teamId" element={<TeamDetailRoute />} />
             <Route path="/admin/users" element={<AdminUsersPage />} />

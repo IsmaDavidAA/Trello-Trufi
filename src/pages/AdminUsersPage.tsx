@@ -82,7 +82,7 @@ export function AdminUsersPage() {
       )}
 
       <section className="mb-8">
-        <h2 className="mb-3 font-display text-xl font-bold">Equipo activo</h2>
+        <h2 className="mb-3 font-display text-xl font-semibold">Equipo activo</h2>
         <div className="overflow-hidden rounded-2xl border border-line bg-surface/90">
           <table className="w-full text-left text-sm">
             <thead className="bg-canvas text-mute">
@@ -110,7 +110,7 @@ export function AdminUsersPage() {
       </section>
 
       <section>
-        <h2 className="mb-3 font-display text-xl font-bold">Invitaciones</h2>
+        <h2 className="mb-3 font-display text-xl font-semibold">Invitaciones</h2>
         <div className="space-y-2">
           {invites.map((inv) => (
             <div
