@@ -10,6 +10,7 @@ import { TeamsPage, TeamDetailPage } from './pages/TeamsPage'
 import { AdminUsersPage } from './pages/AdminUsersPage'
 import { GanttPage } from './pages/GanttPage'
 import { DataPage } from './pages/DataPage'
+import { ResetPasswordPage } from './pages/ResetPasswordPage'
 
 function Protected({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth()
@@ -34,6 +35,7 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/invite/:token" element={<InvitePage />} />
+          <Route path="/reset/:token" element={<ResetPasswordPage />} />
           <Route
             element={
               <Protected>
