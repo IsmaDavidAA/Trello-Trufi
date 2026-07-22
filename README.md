@@ -17,7 +17,9 @@ Tablero estilo Trello/Vikunja para el equipo Trufi: **Vite + React + Supabase**,
 1. Crea un proyecto en [supabase.com](https://supabase.com)
 2. SQL Editor → pega y ejecuta `supabase/schema.sql`
 3. Authentication → Providers → Email: habilita email/password
-4. (Recomendado) Authentication → Settings: desactiva “Allow new users to sign up” **después** de crear el primer admin, **o** deja signup activo solo vía flujo `/invite/:token` (el trigger rechaza emails sin invitación, excepto el primer usuario)
+4. **Importante (invitaciones):** Authentication → Providers → Email → desactiva **Confirm email**.  
+   Si queda activo, cada signup intenta mandar correo y en el plan gratis aparece `email rate limit exceeded`. Con invitaciones propias no hace falta confirmar por email.
+5. (Opcional) Authentication → Settings: desactiva “Allow new users to sign up” **después** de crear el primer admin; el flujo `/invite/:token` sigue pudiendo usar `signUp` si el provider lo permite, o crea usuarios desde el dashboard. El trigger rechaza emails sin invitación (excepto el primer usuario).
 
 **Primer admin:** registra el primer usuario desde `/login` creando la cuenta en Auth Dashboard (Add user) **o** deja signup abierto una sola vez: el primer `auth.users` se convierte en admin automáticamente.
 

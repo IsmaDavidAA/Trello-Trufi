@@ -85,12 +85,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(null)
       },
       async acceptInvite(email, password, fullName) {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: { data: { full_name: fullName } },
         })
-        return error?.message ?? null
+
+        if (error) {
+          const msg = error.message.toLowerCase()
+          const code = (error as { code?: string }).code || ''
+          if (
+            code === 'over_email_send_rate_limit' ||
+            msg.includes('rate limit') ||
+            msg.includes('email rate')
+          ) {
+            return (
+              'Límite de emails de Supabase alcanzado. En el Dashboard: Authentication → Providers → Email → desactiva “Confirm email”. ' +
+              'Luego espera ~1 hora (o usa otro email de prueba) e inténtalo de nuevo.'
+            )
+          }
+          if (msg.includes('already') || msg.includes('registered')) {
+            const { error: signInErr } = await supabase.auth.signInWithPassword({
+              email,
+              password,
+            })
+            return signInErr
+              ? 'Esa cuenta ya existe. Usa “Ir al login” con la misma contraseña, o pide una nueva invitación.'
+              : null
+          }
+          return error.message
+        }
+
+        // Si “Confirm email” está activo, signup no deja sesión
+        if (!data.session) {
+          const { error: signInErr } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          })
+          if (signInErr) {
+            return (
+              'Cuenta creada, pero Auth pide confirmar el correo. Desactiva “Confirm email” en Supabase ' +
+              '(Authentication → Providers → Email) para que las invitaciones funcionen sin email.'
+            )
+          }
+        }
+
+        return null
       },
     }),
     [session, profile, loading, refreshProfile],
