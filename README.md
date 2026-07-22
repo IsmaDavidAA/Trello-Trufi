@@ -40,16 +40,28 @@ npm run dev
 2. Comparte el enlace `/invite/<token>`  
 3. La persona define contraseña y entra
 
-### 4. GitHub Pages
+### 4. GitHub Pages (importante: secrets)
 
-1. Settings → Pages → Source: GitHub Actions  
-2. Secrets del repo:
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
-3. Push a `main` (workflow en `.github/workflows/deploy.yml`)
-4. En Supabase Auth → URL Configuration agrega tu URL de Pages (redirect)
+El archivo `.env` **no se sube** a GitHub. En el servidor hay que definir secrets:
 
-Si el repo se llama `Trello-Trufi`, el workflow ya usa `VITE_BASE=/Trello-Trufi/`.
+1. Ve a: https://github.com/IsmaDavidAA/Trello-Trufi/settings/secrets/actions  
+2. **New repository secret** y crea exactamente estos dos:
+
+| Name | Value |
+|------|--------|
+| `VITE_SUPABASE_URL` | la misma URL de tu `.env` (`https://….supabase.co`) |
+| `VITE_SUPABASE_ANON_KEY` | la misma anon key de tu `.env` |
+
+3. **Settings → Pages** → Source: **GitHub Actions**
+4. Vuelve a desplegar: Actions → **Deploy GitHub Pages** → **Run workflow**,  
+   o haz push a `main`.
+5. En Supabase → **Authentication** → **URL Configuration**:
+   - Site URL: `https://ismadavidaa.github.io/Trello-Trufi/`
+   - Redirect URLs: `https://ismadavidaa.github.io/Trello-Trufi/**`
+
+Las rutas usan **HashRouter** (`…/Trello-Trufi/#/boards/...`) para que el reload no dé 404 en Pages.
+
+Si faltan los secrets, el workflow falla con un error claro.
 
 ## Modelo de datos (resumen)
 

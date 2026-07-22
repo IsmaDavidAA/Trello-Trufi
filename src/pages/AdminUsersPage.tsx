@@ -1,8 +1,9 @@
 import type { FormEvent } from 'react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { Modal, PageHeader } from '../components/Modal'
+import { inviteUrl } from '../lib/urls'
 import type { Invite, Profile } from '../lib/types'
 
 export function AdminUsersPage() {
@@ -15,11 +16,6 @@ export function AdminUsersPage() {
   const [role, setRole] = useState<'admin' | 'member'>('member')
   const [error, setError] = useState<string | null>(null)
   const [createdLink, setCreatedLink] = useState<string | null>(null)
-
-  const base = useMemo(() => {
-    const b = import.meta.env.BASE_URL || '/'
-    return `${window.location.origin}${b.endsWith('/') ? b.slice(0, -1) : b}`
-  }, [])
 
   async function load() {
     const [{ data: inv }, { data: prof }] = await Promise.all([
@@ -56,7 +52,7 @@ export function AdminUsersPage() {
       setError(err.message)
       return
     }
-    const link = `${base}/invite/${(data as Invite).token}`
+    const link = inviteUrl((data as Invite).token)
     setCreatedLink(link)
     setEmail('')
     setFullName('')
@@ -136,7 +132,7 @@ export function AdminUsersPage() {
                     type="button"
                     className="font-semibold text-ink hover:underline"
                     onClick={() => {
-                      const link = `${base}/invite/${inv.token}`
+                      const link = inviteUrl(inv.token)
                       void navigator.clipboard.writeText(link)
                       setCreatedLink(link)
                     }}

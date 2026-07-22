@@ -24,13 +24,16 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { Modal } from '../components/Modal'
 import { Markdown } from '../components/Markdown'
-import { CARD_COLORS, type Board, type Card, type Column } from '../lib/types'
+import { CARD_COLORS, type Board, type Card, type Column, type Profile } from '../lib/types'
+import { initialsOf } from '../lib/urls'
 
 function SortableCard({
   card,
+  assignees,
   onOpen,
 }: {
   card: Card
+  assignees: Profile[]
   onOpen: (c: Card) => void
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
@@ -39,7 +42,7 @@ function SortableCard({
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.4 : 1,
-    borderLeft: `4px solid ${card.color || '#cbd5e1'}`,
+    borderLeft: `4px solid ${card.color || '#d4d4d4'}`,
   }
   return (
     <button
@@ -58,13 +61,26 @@ function SortableCard({
           {card.title}
         </span>
         {card.done && (
-          <span className="rounded-md bg-ok/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ok">
+          <span className="rounded-md bg-neutral-200 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-mute">
             done
           </span>
         )}
       </div>
       {card.due_date && (
         <p className="mt-2 text-xs font-medium text-mute">{card.due_date}</p>
+      )}
+      {assignees.length > 0 && (
+        <div className="mt-2.5 flex flex-wrap gap-1">
+          {assignees.map((p) => (
+            <span
+              key={p.id}
+              title={p.full_name || p.email}
+              className="grid h-6 w-6 place-items-center rounded-full bg-neutral-200 text-[10px] font-bold text-ink"
+            >
+              {initialsOf(p.full_name || p.email)}
+            </span>
+          ))}
+        </div>
       )}
     </button>
   )
@@ -73,6 +89,8 @@ function SortableCard({
 function SortableColumn({
   column,
   cards,
+  assigneesByCard,
+  profilesById,
   onAddCard,
   onOpenCard,
   onRename,
@@ -80,6 +98,8 @@ function SortableColumn({
 }: {
   column: Column
   cards: Card[]
+  assigneesByCard: Record<string, string[]>
+  profilesById: Record<string, Profile>
   onAddCard: (columnId: string, title: string) => void
   onOpenCard: (c: Card) => void
   onRename: (columnId: string, title: string) => void
@@ -126,7 +146,14 @@ function SortableColumn({
       <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
         <div className="flex min-h-[48px] flex-col gap-2.5">
           {cards.map((c) => (
-            <SortableCard key={c.id} card={c} onOpen={onOpenCard} />
+            <SortableCard
+              key={c.id}
+              card={c}
+              assignees={(assigneesByCard[c.id] || [])
+                .map((id) => profilesById[id])
+                .filter(Boolean)}
+              onOpen={onOpenCard}
+            />
           ))}
         </div>
       </SortableContext>
@@ -158,10 +185,19 @@ export function BoardPage() {
   const [cards, setCards] = useState<Card[]>([])
   const [activeCard, setActiveCard] = useState<Card | null>(null)
   const [editCard, setEditCard] = useState<Card | null>(null)
+  const [editAssigneeIds, setEditAssigneeIds] = useState<string[]>([])
+  const [profiles, setProfiles] = useState<Profile[]>([])
+  const [assigneesByCard, setAssigneesByCard] = useState<Record<string, string[]>>({})
   const [showDesc, setShowDesc] = useState(false)
   const [boardDesc, setBoardDesc] = useState('')
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
+
+  const profilesById = useMemo(() => {
+    const map: Record<string, Profile> = {}
+    for (const p of profiles) map[p.id] = p
+    return map
+  }, [profiles])
 
   const cardsByColumn = useMemo(() => {
     const map: Record<string, Card[]> = {}
@@ -178,9 +214,10 @@ export function BoardPage() {
 
   async function load() {
     if (!boardId) return
-    const [{ data: b }, { data: cols }] = await Promise.all([
+    const [{ data: b }, { data: cols }, { data: prof }] = await Promise.all([
       supabase.from('boards').select('*').eq('id', boardId).maybeSingle(),
       supabase.from('columns').select('*').eq('board_id', boardId).order('position'),
+      supabase.from('profiles').select('*').order('full_name'),
     ])
     const colList = (cols as Column[]) || []
     const colIds = colList.map((c) => c.id)
@@ -193,10 +230,26 @@ export function BoardPage() {
         .order('position')
       cardRows = (data as Card[]) || []
     }
+    const cardIds = cardRows.map((c) => c.id)
+    const assigneeMap: Record<string, string[]> = {}
+    for (const id of cardIds) assigneeMap[id] = []
+    if (cardIds.length) {
+      const { data: assigns } = await supabase
+        .from('card_assignees')
+        .select('card_id, user_id')
+        .in('card_id', cardIds)
+      for (const row of assigns || []) {
+        const r = row as { card_id: string; user_id: string }
+        if (!assigneeMap[r.card_id]) assigneeMap[r.card_id] = []
+        assigneeMap[r.card_id].push(r.user_id)
+      }
+    }
     setBoard((b as Board) || null)
     setBoardDesc((b as Board)?.description_md || '')
     setColumns(colList)
     setCards(cardRows)
+    setProfiles((prof as Profile[]) || [])
+    setAssigneesByCard(assigneeMap)
   }
 
   useEffect(() => {
@@ -386,14 +439,43 @@ export function BoardPage() {
     if (data) {
       setCards((prev) => prev.map((c) => (c.id === editCard.id ? (data as Card) : c)))
     }
+
+    await supabase.from('card_assignees').delete().eq('card_id', editCard.id)
+    if (editAssigneeIds.length) {
+      await supabase.from('card_assignees').insert(
+        editAssigneeIds.map((user_id) => ({
+          card_id: editCard.id,
+          user_id,
+        })),
+      )
+    }
+    setAssigneesByCard((prev) => ({ ...prev, [editCard.id]: [...editAssigneeIds] }))
     setEditCard(null)
+    setEditAssigneeIds([])
   }
 
   async function deleteCard() {
     if (!editCard) return
     await supabase.from('cards').delete().eq('id', editCard.id)
     setCards((prev) => prev.filter((c) => c.id !== editCard.id))
+    setAssigneesByCard((prev) => {
+      const next = { ...prev }
+      delete next[editCard.id]
+      return next
+    })
     setEditCard(null)
+    setEditAssigneeIds([])
+  }
+
+  function openCard(card: Card) {
+    setEditCard(card)
+    setEditAssigneeIds([...(assigneesByCard[card.id] || [])])
+  }
+
+  function toggleAssignee(userId: string) {
+    setEditAssigneeIds((prev) =>
+      prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId],
+    )
   }
 
   async function saveBoardDesc() {
@@ -457,8 +539,10 @@ export function BoardPage() {
                 key={col.id}
                 column={col}
                 cards={cardsByColumn[col.id] || []}
+                assigneesByCard={assigneesByCard}
+                profilesById={profilesById}
                 onAddCard={(id, title) => void addCard(id, title)}
-                onOpenCard={setEditCard}
+                onOpenCard={openCard}
                 onRename={(id, title) => void renameColumn(id, title)}
                 onDelete={(id) => void deleteColumn(id)}
               />
@@ -478,7 +562,7 @@ export function BoardPage() {
       </DndContext>
 
       {editCard && (
-        <Modal title="Tarjeta" onClose={() => setEditCard(null)} wide>
+        <Modal title="Tarjeta" onClose={() => { setEditCard(null); setEditAssigneeIds([]) }} wide>
           <form className="space-y-4" onSubmit={saveCard}>
             <label className="block text-sm font-medium">
               Título
@@ -519,6 +603,38 @@ export function BoardPage() {
                 />
                 Marcar como done
               </label>
+            </div>
+            <div>
+              <p className="mb-2 text-sm font-medium">Asignados</p>
+              <div className="max-h-40 space-y-1 overflow-y-auto rounded-lg border border-line p-2">
+                {profiles.length === 0 && (
+                  <p className="px-1 py-2 text-xs text-mute">No hay usuarios todavía.</p>
+                )}
+                {profiles.map((p) => {
+                  const checked = editAssigneeIds.includes(p.id)
+                  return (
+                    <label
+                      key={p.id}
+                      className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-neutral-50"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleAssignee(p.id)}
+                      />
+                      <span className="grid h-6 w-6 place-items-center rounded-full bg-neutral-200 text-[10px] font-bold">
+                        {initialsOf(p.full_name || p.email)}
+                      </span>
+                      <span>
+                        <span className="font-medium">{p.full_name || p.email}</span>
+                        {p.full_name && (
+                          <span className="ml-1 text-xs text-mute">{p.email}</span>
+                        )}
+                      </span>
+                    </label>
+                  )
+                })}
+              </div>
             </div>
             <div>
               <p className="mb-2 text-sm font-medium">Color</p>

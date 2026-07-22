@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-dom'
+import { HashRouter, Navigate, Route, Routes, useParams } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { Layout } from './components/Layout'
 import { LoginPage } from './pages/LoginPage'
@@ -12,7 +12,7 @@ import { AdminUsersPage } from './pages/AdminUsersPage'
 function Protected({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth()
   if (loading) {
-    return <p className="p-10 text-center text-ink/50">Cargando…</p>
+    return <p className="p-10 text-center text-mute">Cargando…</p>
   }
   if (!session) return <Navigate to="/login" replace />
   return children
@@ -25,11 +25,10 @@ function TeamDetailRoute() {
 }
 
 export default function App() {
-  const basename = import.meta.env.BASE_URL.replace(/\/$/, '') || undefined
-
+  // HashRouter evita 404 al recargar en GitHub Pages
   return (
     <AuthProvider>
-      <BrowserRouter basename={basename}>
+      <HashRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/invite/:token" element={<InvitePage />} />
@@ -48,7 +47,7 @@ export default function App() {
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </BrowserRouter>
+      </HashRouter>
     </AuthProvider>
   )
 }
